@@ -1,0 +1,33 @@
+---
+BasedOnStyle: LLVM
+
+# Allow double brackets such as std::vector<std::vector<int>>.
+Standard: Cpp11
+
+SortIncludes: false
+
+# Keep lines under 72 columns long.
+ColumnLimit: 72
+
+# Indent case labels.
+IndentCaseLabels: false
+
+# Right-align pointers and references
+PointerAlignment: Left
+
+# ANGLE likes to align things as much as possible.
+AlignOperands: true
+AlignConsecutiveAssignments: true
+
+# Use 2 space negative offset for access modifiers
+AccessModifierOffset: -2
+
+AllowShortCaseLabelsOnASingleLine: false
+
+# Useful for spacing out functions in classes
+KeepEmptyLinesAtTheStartOfBlocks: true
+
+# Indent nested PP directives.
+IndentPPDirectives: AfterHash
+
+IndentWidth: 2

@@ -2,6 +2,7 @@
 based on epoll edge trigger, nonblocking IO
 
 - [x] single thread echo server
+- [x] single thread http(get) server
 
 ## Build
 ### single thread echo server
@@ -12,6 +13,12 @@ $ make echoserver
 $ telnet 127.0.0.1 8088
 
 
+```
+### single thread echo server
+support method: GET  
+support Connection: keep-alive
+```
+$ make httpserver
 ```
 
 ## format

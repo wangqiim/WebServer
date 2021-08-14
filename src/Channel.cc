@@ -11,11 +11,12 @@ Channel::~Channel() {}
 void Channel::HandleEvent() {
   switch (this->events_) {
   case EPOLLRDHUP:
-		// Stream socket peer closed connection, or shut down writing half of connection
+    // Stream socket peer closed connection, or shut down writing half
+    // of connection
     this->closehandler_();
     break;
-  case EPOLLPRI:  
-	// There is urgent data available for read(2) operations.
+  case EPOLLPRI:
+    // There is urgent data available for read(2) operations.
   case EPOLLIN:
     this->readhandler_();
     break;

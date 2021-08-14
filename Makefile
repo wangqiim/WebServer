@@ -18,25 +18,44 @@ _OBJECTS = \
 	Socket \
 	TcpConnection \
 	TcpServer \
-	EchoServer
+	EchoServer \
+	HttpSession \
+	HttpServer
 OBJECTS = $(patsubst %,${OBJECTDIR}/%.o,$(_OBJECTS))
 
 _DEPS = *.h
 DEPS = $(patsubst %,${IDIR}/%,$(_DEPS))
 
-echoserver: main
-	${BINDIR}/$<
+.PHONY: clean echomain.out httpmain.out
+
+echomain.out: ${SRCDIR}/main.cc
+	$(CC) -c $< $(CFLAGS) -o $@ -D ECHOMAIN
+
+httpmain.out: ${SRCDIR}/main.cc
+	$(CC) -c $< $(CFLAGS) -o $@ -D HTTPSERVER
+
+echoserver: echomain.out ${OBJECTS}
+	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+	${BINDIR}/$@
+
+httpserver: httpmain.out ${OBJECTS}
+	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+	${BINDIR}/$@
+
+# echoserver: ${OBJECTDIR}/main.o ${OBJECTS}
+# 	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+# 	${BINDIR}/$@
+
+# httpserver: ${OBJECTDIR}/main.o ${OBJECTS}
+# 	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+# 	${BINDIR}/$@
 
 ${OBJECTDIR}/%.o: ${SRCDIR}/%.cc ${DEPS}
 	$(CC) -c $< $(CFLAGS) -o $@
 
-main: ${OBJECTDIR}/main.o ${OBJECTS}
-	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
-
 format:
 	find . -name *.cc -o -name *.h | xargs clang-format -style=file -i
 
-.PHONY: clean
 
 clean: 
 	rm -rf ./build/*

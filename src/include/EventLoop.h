@@ -10,7 +10,7 @@ class EventLoop {
 public:
   typedef std::function<void()> Functor;
   typedef std::vector<Channel*> ChannelList;
-  
+
   EventLoop();
   ~EventLoop();
 
@@ -28,9 +28,7 @@ public:
     this->poller_.UpdateChannel(chan);
   }
 
-  void AddTask(Functor func) {
-    this->functorlist_.push_back(func);
-  }
+  void AddTask(Functor func) { this->functorlist_.push_back(func); }
 
   void ExecuteTask() {
     for (Functor& func : this->functorlist_)

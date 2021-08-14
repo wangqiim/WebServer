@@ -2,13 +2,23 @@
 
 #include "EventLoop.h"
 #include "EchoServer.h"
+#include "HttpServer.h"
 
 int main() {
-  std::cout << "server is starting on port: 8080" << std::endl;
   EventLoop loop;
+#ifdef HTTPSERVER
+  std::cout << "http server is starting on port: 8088" << std::endl;
+  HttpServer httpServer(&loop, 8088);
+  httpServer.Start();
+  loop.loop();
+#elif ECHOSERVER
+  std::cout << "echo server is starting on port: 8088" << std::endl;
   EchoServer echoServer(&loop, 8088);
   echoServer.Start();
   loop.loop();
-  std::cout << "server is running on port: 8080" << std::endl;
+#else
+  return 1;
+#endif
+  std::cout << "server is running on port: 8088" << std::endl;
   return 0;
 }

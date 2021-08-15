@@ -25,7 +25,8 @@ void HttpServer::HandleNewConnection(TcpConnection* tcpConn) {
 
   // char remote[INET_ADDRSTRLEN];
   // printf("new conn with ip: %s and port: %d\n",
-  //        inet_ntop(AF_INET, &tcpConn->GetClientAddr()->sin_addr, remote,
+  //        inet_ntop(AF_INET, &tcpConn->GetClientAddr()->sin_addr,
+  //        remote,
   //                  INET_ADDRSTRLEN),
   //        ntohs(tcpConn->GetClientAddr()->sin_port));
 }

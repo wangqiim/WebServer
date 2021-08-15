@@ -32,6 +32,7 @@ TcpConnection::TcpConnection(EventLoop* loop, int fd,
 TcpConnection::~TcpConnection() {
   this->loop_->RemoveChannelToPoller(this->channel_);
   delete this->channel_;
+  close(this->fd_);
 }
 
 void TcpConnection::Send(std::string& msg) {

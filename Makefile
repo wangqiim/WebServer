@@ -29,7 +29,7 @@ DEPS = $(patsubst %,${IDIR}/%,$(_DEPS))
 .PHONY: clean echomain.out httpmain.out
 
 echomain.out: ${SRCDIR}/main.cc
-	$(CC) -c $< $(CFLAGS) -o $@ -D ECHOMAIN
+	$(CC) -c $< $(CFLAGS) -o $@ -D ECHOSERVER
 
 httpmain.out: ${SRCDIR}/main.cc
 	$(CC) -c $< $(CFLAGS) -o $@ -D HTTPSERVER

@@ -25,7 +25,7 @@ void HttpSession::PraseHttpRequest(std::string& s) {
     sstream >> (this->reqctx_.version);
   } else {
     this->statecode_ = 400;
-    this->statemsg_  = "Bad_Request";
+    this->statemsg_  = "Bad Request";
     return;
   }
 
@@ -42,10 +42,10 @@ void HttpSession::PraseHttpRequest(std::string& s) {
     }
   } else {
     this->statecode_ = 400;
-    this->statemsg_  = "Bad_Request";
+    this->statemsg_  = "Bad Request";
     return;
   }
-  // prase http request body
+  // parse http request body
   this->reqctx_.body = msg.substr(pos_crlfcrlf + 4);
 }
 

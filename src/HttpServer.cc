@@ -39,6 +39,7 @@ void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {
   tcpConn->Send(msg);
   if (!session->KeepAlive()) {
     // 短链接
+    tcpConn->HandleClose();
   }
 }
 

@@ -17,7 +17,7 @@ void Channel::HandleEvent() {
     break;
   case EPOLLPRI:
     // There is urgent data available for read(2) operations.
-  case EPOLLIN:
+  case EPOLLIN:  // if read return 0, receive FIN
     this->readhandler_();
     break;
   case EPOLLOUT:

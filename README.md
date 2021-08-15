@@ -26,7 +26,11 @@ $ make httpserver
 $ make format
 ```
 
+## BUG
+HTTP parser state machine
+
 ## Ref
+[chenshuo(muduo)](https://github.com/chenshuo/muduo)
 [linyacool(WebServer)](https://github.com/linyacool/WebServer)  
 [chenshuaihao(NetServer)](https://github.com/chenshuaihao/NetServer)  
 [jayice(NetServre)](https://github.com/Jayice-zjw/WebServer)  

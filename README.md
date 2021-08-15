@@ -1,11 +1,13 @@
 # A C++ High Performance WebServer
 based on epoll edge trigger, nonblocking IO
 
-- [x] single thread echo server
-- [x] single thread http(get) server
+- [x] single thread echo server (v1.0.0)
+- [x] single thread http(get) server (v1.0.0)
+- [x] eventloop pool echo server (v2.0.0)
+- [x] eventloop pool http server (v2.0.0)
 
 ## Build
-### single thread echo server
+### echo server
 ```
 $ make echoserver
 
@@ -14,7 +16,7 @@ $ telnet 127.0.0.1 8088
 
 
 ```
-### single thread echo server
+### http server
 support method: GET  
 support Connection: keep-alive
 ```

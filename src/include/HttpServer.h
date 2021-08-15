@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <mutex>
 #include "EventLoop.h"
 #include "TcpServer.h"
 #include "TcpConnection.h"
@@ -16,11 +17,12 @@ private:
   void HandleClose(TcpConnection* ptcpconn);
   void HandleError(TcpConnection* ptcpconn);
 
+  std::mutex mutex_;
   TcpServer tcpserver_;
   std::map<TcpConnection*, HttpSession*> httpsessionnlist_;
 
 public:
-  HttpServer(EventLoop* loop, int port);
+  HttpServer(EventLoop* loop, int port, int threadNum);
   ~HttpServer();
 
   void Start();

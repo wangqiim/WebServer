@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <mutex>
 #include <sys/epoll.h>
 #include "Channel.h"
 
@@ -25,6 +26,7 @@ private:
   int pollfd_;
   std::vector<struct epoll_event> eventlist_;
   std::map<int, Channel*> channelmap_;
+  std::mutex mutex_;
 };
 
 #endif

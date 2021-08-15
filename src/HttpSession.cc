@@ -3,7 +3,7 @@
 #include <string.h>
 #include "HttpSession.h"
 
-HttpSession::HttpSession() : statemsg_("OK"), statecode_(200) {}
+HttpSession::HttpSession() : statecode_(200), statemsg_("OK") {}
 
 HttpSession::~HttpSession() {}
 

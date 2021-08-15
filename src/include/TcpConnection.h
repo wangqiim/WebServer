@@ -44,6 +44,10 @@ public:
     this->connectioncleanup_ = cb;
   }
 
+  void AddChannelToPoller() {
+    this->loop_->AddChannelToPoller(this->channel_);
+  }
+
   struct sockaddr_in* GetClientAddr() {
     return &this->clientaddr_;
   }

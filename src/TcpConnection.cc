@@ -26,7 +26,7 @@ TcpConnection::TcpConnection(EventLoop* loop, int fd,
   this->channel_->SetErrorHandle(
       std::bind(&TcpConnection::HandleError, this));
 
-  this->loop_->AddChannelToPoller(this->channel_);
+  // this->loop_->AddChannelToPoller(this->channel_);
 }
 
 TcpConnection::~TcpConnection() {

@@ -36,6 +36,8 @@ public:
     this->functorlist_.clear();
   }
 
+  void Stop() { this->stop_ = true; }
+
 private:
   std::vector<Functor> functorlist_;
   ChannelList channellist_;

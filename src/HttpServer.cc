@@ -2,8 +2,8 @@
 #include <functional>
 #include "HttpServer.h"
 
-HttpServer::HttpServer(EventLoop* loop, int port)
-    : tcpserver_(loop, port) {
+HttpServer::HttpServer(EventLoop* loop, int port, int threadNum)
+    : tcpserver_(loop, port, threadNum) {
   tcpserver_.SetNewConnCallback(std::bind(
       &HttpServer::HandleNewConnection, this, std::placeholders::_1));
   tcpserver_.SetMessageCallback(std::bind(&HttpServer::HandleMessage,
@@ -20,8 +20,11 @@ HttpServer::HttpServer(EventLoop* loop, int port)
 HttpServer::~HttpServer() {}
 
 void HttpServer::HandleNewConnection(TcpConnection* tcpConn) {
-  HttpSession* httpSession         = new HttpSession();
-  this->httpsessionnlist_[tcpConn] = httpSession;
+  HttpSession* httpSession = new HttpSession();
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    this->httpsessionnlist_[tcpConn] = httpSession;
+  }
 
   // char remote[INET_ADDRSTRLEN];
   // printf("new conn with ip: %s and port: %d\n",
@@ -32,7 +35,11 @@ void HttpServer::HandleNewConnection(TcpConnection* tcpConn) {
 }
 
 void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {
-  HttpSession* session = this->httpsessionnlist_[tcpConn];
+  HttpSession* session = NULL;
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    session = this->httpsessionnlist_[tcpConn];
+  }
   session->PraseHttpRequest(s);
   session->HttpProcess();
   std::string msg;
@@ -47,12 +54,14 @@ void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {
 void HttpServer::HandleSendComplete(TcpConnection* tcpConn) {}
 
 void HttpServer::HandleClose(TcpConnection* tcpConn) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   HttpSession* session = httpsessionnlist_[tcpConn];
   httpsessionnlist_.erase(tcpConn);
   delete session;
 }
 
 void HttpServer::HandleError(TcpConnection* tcpConn) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   HttpSession* session = httpsessionnlist_[tcpConn];
   httpsessionnlist_.erase(tcpConn);
   delete session;

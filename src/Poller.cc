@@ -19,13 +19,16 @@ void Poller::poll(ChannelList& activechannellist) {
                  static_cast<int>(this->eventlist_.size()), timeout);
   assert(nfds != -1);
 
-  for (int i = 0; i < nfds; ++i) {
-    int events    = this->eventlist_[i].events;
-    Channel* chan = static_cast<Channel*>(eventlist_[i].data.ptr);
-    int fd        = chan->GetFd();
-    assert(this->channelmap_.count(fd) != 0);
-    chan->SetEvents(events);
-    activechannellist.push_back(chan);
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    for (int i = 0; i < nfds; ++i) {
+      int events    = this->eventlist_[i].events;
+      Channel* chan = static_cast<Channel*>(eventlist_[i].data.ptr);
+      int fd        = chan->GetFd();
+      assert(this->channelmap_.count(fd) != 0);
+      chan->SetEvents(events);
+      activechannellist.push_back(chan);
+    }
   }
 
   if (nfds == static_cast<int>(this->eventlist_.size()))
@@ -33,6 +36,7 @@ void Poller::poll(ChannelList& activechannellist) {
 }
 
 void Poller::AddChannel(Channel* chan) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   int fd = chan->GetFd();
   struct epoll_event ev;
   ev.events             = chan->GetEvents();
@@ -44,6 +48,7 @@ void Poller::AddChannel(Channel* chan) {
 }
 
 void Poller::RemoveChannel(Channel* chan) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   int fd = chan->GetFd();
   struct epoll_event ev;
   ev.events   = chan->GetEvents();
@@ -55,6 +60,7 @@ void Poller::RemoveChannel(Channel* chan) {
 }
 
 void Poller::UpdateChannel(Channel* chan) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   int fd = chan->GetFd();
   struct epoll_event ev;
   ev.events   = chan->GetEvents();

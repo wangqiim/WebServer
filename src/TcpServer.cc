@@ -11,8 +11,9 @@
 
 void Setnonblocking(int fd);
 
-TcpServer::TcpServer(EventLoop* loop, int port)
-    : serversocket_(), loop_(loop), serverchannel_(), conncount_(0) {
+TcpServer::TcpServer(EventLoop* loop, int port, int threadNum)
+    : serversocket_(), loop_(loop), serverchannel_(),
+      eventLoopThreadPool_(loop_, threadNum), conncount_(0) {
   this->serversocket_.SetReuseAddr();
   this->serversocket_.BindAddress(port);
   this->serversocket_.Listen();
@@ -28,6 +29,7 @@ TcpServer::TcpServer(EventLoop* loop, int port)
 TcpServer::~TcpServer() {}
 
 void TcpServer::Start() {
+  this->eventLoopThreadPool_.Start();
   this->serverchannel_.SetEvents(EPOLLIN | EPOLLET);
   this->loop_->AddChannelToPoller(&this->serverchannel_);
 }
@@ -43,22 +45,28 @@ void TcpServer::OnNewConnection() {
       continue;
     }
     Setnonblocking(clientfd);
-
+    EventLoop* loopWorker = this->eventLoopThreadPool_.GetNextLoop();
     TcpConnection* tcpConnection =
-        new TcpConnection(loop_, clientfd, clientaddr);
+        new TcpConnection(loopWorker, clientfd, clientaddr);
     tcpConnection->SetMessaeCallback(this->messagecallback_);
     tcpConnection->SetSendCompleteCallback(this->sendcompletecallback_);
     tcpConnection->SetCloseCallback(this->closecallback_);
     tcpConnection->SetErrorCallback(this->errorcallback_);
     tcpConnection->SetConnectionCleanUp(
         std::bind(&TcpServer::RemoveConnection, this, tcpConnection));
-    tcpconnlist_[clientfd] = tcpConnection;
+    {
+      std::lock_guard<std::mutex> lock(this->mutex_);
+      this->tcpconnlist_[clientfd] = tcpConnection;
+    }
 
     this->newconnectioncallback_(tcpConnection);
+
+    tcpConnection->AddChannelToPoller();
   }
 }
 
 void TcpServer::RemoveConnection(TcpConnection* tcpConnection) {
+  std::lock_guard<std::mutex> lock(this->mutex_);
   --this->conncount_;
   this->tcpconnlist_.erase(tcpConnection->Fd());
   delete tcpConnection;

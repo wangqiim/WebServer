@@ -1,13 +1,16 @@
 #ifndef _TCP_SERVER_H_
 #define _TCP_SERVER_H_
 
+#include <atomic>
 #include <functional>
 #include <string>
 #include <map>
+#include <mutex>
 #include "Socket.h"
 #include "Channel.h"
 #include "EventLoop.h"
 #include "TcpConnection.h"
+#include "EventLoopThreadPool.h"
 
 #define MAXCONNECTION 10000
 
@@ -16,7 +19,7 @@ public:
   typedef std::function<void(TcpConnection*, std::string&)>
       MessageCallback;
   typedef std::function<void(TcpConnection*)> Callback;
-  TcpServer(EventLoop* loop, int port);
+  TcpServer(EventLoop* loop, int port, int threadNum = 0);
   ~TcpServer();
 
   void Start();
@@ -41,8 +44,11 @@ private:
   Socket serversocket_;
   EventLoop* loop_;
   Channel serverchannel_;
-  int conncount_;
+  EventLoopThreadPool eventLoopThreadPool_;
   std::map<int, TcpConnection*> tcpconnlist_;
+
+  std::atomic<int> conncount_;
+  std::mutex mutex_;
 
   Callback newconnectioncallback_;
   MessageCallback messagecallback_;

@@ -3,8 +3,8 @@
 #include <functional>
 #include "EchoServer.h"
 
-EchoServer::EchoServer(EventLoop* loop, int port)
-    : tcpserver_(loop, port) {
+EchoServer::EchoServer(EventLoop* loop, int port, int threadNum)
+    : tcpserver_(loop, port, threadNum) {
   tcpserver_.SetNewConnCallback(std::bind(
       &EchoServer::HandleNewConnection, this, std::placeholders::_1));
   tcpserver_.SetMessageCallback(std::bind(&EchoServer::HandleMessage,

@@ -9,7 +9,7 @@ $(shell mkdir -p ${OBJECTDIR})
 $(shell mkdir -p ${BINDIR})
 
 CC = g++
-CFLAGS = -I${IDIR}
+CFLAGS = -g -I${IDIR} -Wall -lpthread
 
 _OBJECTS = \
 	Channel \
@@ -20,7 +20,10 @@ _OBJECTS = \
 	TcpServer \
 	EchoServer \
 	HttpSession \
-	HttpServer
+	HttpServer \
+	EventLoopThread \
+	EventLoopThreadPool
+
 OBJECTS = $(patsubst %,${OBJECTDIR}/%.o,$(_OBJECTS))
 
 _DEPS = *.h
@@ -35,11 +38,11 @@ httpmain.out: ${SRCDIR}/main.cc
 	$(CC) -c $< $(CFLAGS) -o $@ -D HTTPSERVER
 
 echoserver: echomain.out ${OBJECTS}
-	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+	${CC} $^ ${CFLAGS} -o ${BINDIR}/$@
 	${BINDIR}/$@
 
 httpserver: httpmain.out ${OBJECTS}
-	${CC} ${CFLAGS} $^ -o ${BINDIR}/$@
+	${CC} $^ ${CFLAGS} -o ${BINDIR}/$@
 	${BINDIR}/$@
 
 # echoserver: ${OBJECTDIR}/main.o ${OBJECTS}

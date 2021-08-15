@@ -26,6 +26,19 @@ $ make httpserver
 $ make format
 ```
 
+## performance test
+[WebBench](https://github.com/EZLippi/WebBench)  
+[Web性能压力测试之Webbench使用详解](https://www.cnblogs.com/fjping0606/p/5852049.html)
+```
+$ make httpserver
+
+--------------another terminal window--------------------
+$ webbench -c 20 -t 30 --get -1 http://127.0.0.1:8088/index.html
+
+$ webbench -c 20 -t 30 --get -1 http://127.0.0.1:8088/webbench
+
+```
+
 ## BUG
 HTTP parser state machine
 

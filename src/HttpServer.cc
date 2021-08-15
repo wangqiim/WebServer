@@ -23,11 +23,11 @@ void HttpServer::HandleNewConnection(TcpConnection* tcpConn) {
   HttpSession* httpSession         = new HttpSession();
   this->httpsessionnlist_[tcpConn] = httpSession;
 
-  char remote[INET_ADDRSTRLEN];
-  printf("new conn with ip: %s and port: %d\n",
-         inet_ntop(AF_INET, &tcpConn->GetClientAddr()->sin_addr, remote,
-                   INET_ADDRSTRLEN),
-         ntohs(tcpConn->GetClientAddr()->sin_port));
+  // char remote[INET_ADDRSTRLEN];
+  // printf("new conn with ip: %s and port: %d\n",
+  //        inet_ntop(AF_INET, &tcpConn->GetClientAddr()->sin_addr, remote,
+  //                  INET_ADDRSTRLEN),
+  //        ntohs(tcpConn->GetClientAddr()->sin_port));
 }
 
 void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {

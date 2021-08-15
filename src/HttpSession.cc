@@ -86,7 +86,10 @@ void HttpSession::HttpProcess() {
     this->path_ = "/index.html";
   this->path_.insert(0, ".");
   FILE* fp = NULL;
-  if ((fp = fopen(this->path_.c_str(), "rb")) == NULL) {
+  if ("./webbench" == this->path_) {
+    // without disk IO
+    this->responsebody_ = "hello world!";
+  } else if ((fp = fopen(this->path_.c_str(), "rb")) == NULL) {
     this->statecode_ = 404;
     this->statemsg_  = "Not Found";
     this->HttpError(this->statecode_, this->statemsg_);

@@ -2,6 +2,8 @@
 #define _EVENTLOOP_H_
 
 #include <functional>
+#include <thread>
+#include <mutex>
 #include <vector>
 #include "Channel.h"
 #include "Poller.h"
@@ -28,15 +30,30 @@ public:
     this->poller_.UpdateChannel(chan);
   }
 
-  void AddTask(Functor func) { this->functorlist_.push_back(func); }
+  void AddTask(Functor func) {
+    {
+      std::lock_guard<std::mutex> lock(this->mutex_);
+      this->functorlist_.push_back(func);
+    }
+    this->WakeUp();
+  }
 
   void ExecuteTask() {
-    for (Functor& func : this->functorlist_)
+    std::vector<Functor> functorlist;
+    {
+      std::lock_guard<std::mutex> lock(this->mutex_);
+      functorlist.swap(this->functorlist_);
+    }
+    for (Functor& func : functorlist)
       func();
-    this->functorlist_.clear();
   }
 
   void Stop() { this->stop_ = true; }
+
+  std::thread::id GetTID() { return this->tid_; }
+  void WakeUp();
+  void HandleRead();
+  void HandleError();
 
 private:
   std::vector<Functor> functorlist_;
@@ -44,6 +61,11 @@ private:
   ChannelList activechannellist_;
   Poller poller_;
   bool stop_;
+
+  std::thread::id tid_;
+  std::mutex mutex_;
+  int wakeupfd_;
+  Channel wakeupChannel_;
 };
 
 #endif

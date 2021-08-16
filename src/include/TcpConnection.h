@@ -22,6 +22,7 @@ public:
 
   int Fd() { return this->fd_; }
   void Send(std::string& msg);
+  void SendInLoop();
 
   void HandleRead();
   void HandleWrite();
@@ -45,7 +46,8 @@ public:
   }
 
   void AddChannelToPoller() {
-    this->loop_->AddChannelToPoller(this->channel_);
+    this->loop_->AddTask(std::bind(&EventLoop::AddChannelToPoller,
+                                   this->loop_, this->channel_));
   }
 
   struct sockaddr_in* GetClientAddr() {

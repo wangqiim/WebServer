@@ -2,8 +2,10 @@
 #include <functional>
 #include "HttpServer.h"
 
-HttpServer::HttpServer(EventLoop* loop, int port, int threadNum)
-    : tcpserver_(loop, port, threadNum) {
+HttpServer::HttpServer(EventLoop* loop, int port, int ioThreadNum,
+                       int workerThreadNum)
+    : tcpserver_(loop, port, ioThreadNum),
+      threadPool_(workerThreadNum) {
   tcpserver_.SetNewConnCallback(std::bind(
       &HttpServer::HandleNewConnection, this, std::placeholders::_1));
   tcpserver_.SetMessageCallback(std::bind(&HttpServer::HandleMessage,
@@ -15,6 +17,8 @@ HttpServer::HttpServer(EventLoop* loop, int port, int threadNum)
       std::bind(&HttpServer::HandleClose, this, std::placeholders::_1));
   tcpserver_.SetErrorCallback(
       std::bind(&HttpServer::HandleError, this, std::placeholders::_1));
+
+  this->threadPool_.Start();
 }
 
 HttpServer::~HttpServer() {}
@@ -39,6 +43,22 @@ void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {
   {
     std::lock_guard<std::mutex> lock(this->mutex_);
     session = this->httpsessionnlist_[tcpConn];
+  }
+  if (this->threadPool_.GetThreadNum() > 0) {
+    this->threadPool_.AddTask([=, &s]() {
+      if (s.empty())
+        return;
+      session->PraseHttpRequest(s);
+      session->HttpProcess();
+      std::string msg;
+      session->AddToBuf(msg);
+      tcpConn->Send(msg);
+      if (!session->KeepAlive()) {
+        // 短链接
+        tcpConn->HandleClose();
+      }
+    });
+    return;
   }
   session->PraseHttpRequest(s);
   session->HttpProcess();

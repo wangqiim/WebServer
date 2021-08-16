@@ -22,7 +22,8 @@ _OBJECTS = \
 	HttpSession \
 	HttpServer \
 	EventLoopThread \
-	EventLoopThreadPool
+	EventLoopThreadPool \
+	ThreadPool \
 
 OBJECTS = $(patsubst %,${OBJECTDIR}/%.o,$(_OBJECTS))
 

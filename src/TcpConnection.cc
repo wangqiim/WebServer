@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <iostream>
 #include <sys/types.h>
@@ -37,6 +38,16 @@ TcpConnection::~TcpConnection() {
 
 void TcpConnection::Send(std::string& msg) {
   this->bufferout_ += msg;
+  if (this->loop_->GetTID() == std::this_thread::get_id()) {
+    SendInLoop();
+  } else {
+    // worker
+    // 线程也会call这个函数，显然work线程不进行IO操作！放到loop的task里
+    this->loop_->AddTask(std::bind(&TcpConnection::SendInLoop, this));
+  }
+}
+
+void TcpConnection::SendInLoop() {
   int result = sendn(this->fd_, this->bufferout_);
   if (result > 0) {
     uint32_t events = this->channel_->GetEvents();
@@ -140,7 +151,6 @@ int recvn(int fd, std::string& bufferin) {
 int sendn(int fd, std::string& bufferout) {
   ssize_t nbyte = 0;
   int sendsum   = 0;
-  char buffer[BUFSIZE + 1];
   size_t length = bufferout.size();
 
   if (length >= BUFSIZE)

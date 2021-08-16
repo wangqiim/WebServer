@@ -8,6 +8,7 @@
 #include "TcpServer.h"
 #include "TcpConnection.h"
 #include "HttpSession.h"
+#include "ThreadPool.h"
 
 class HttpServer {
 private:
@@ -21,8 +22,11 @@ private:
   TcpServer tcpserver_;
   std::map<TcpConnection*, HttpSession*> httpsessionnlist_;
 
+  ThreadPool threadPool_;
+
 public:
-  HttpServer(EventLoop* loop, int port, int threadNum);
+  HttpServer(EventLoop* loop, int port, int ioThreadNum,
+             int workerThreadNum);
   ~HttpServer();
 
   void Start();

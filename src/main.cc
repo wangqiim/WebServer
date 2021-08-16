@@ -8,7 +8,7 @@ int main() {
   EventLoop loop;
 #ifdef HTTPSERVER
   std::cout << "http server is starting on port: 8088" << std::endl;
-  HttpServer httpServer(&loop, 8088, 2);
+  HttpServer httpServer(&loop, 8088, 2, 2);
   httpServer.Start();
   loop.loop();
 #elif ECHOSERVER

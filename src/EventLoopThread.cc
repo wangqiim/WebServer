@@ -26,6 +26,7 @@ void EventLoopThread::ThreadFunc() {
   sin << this->threadID_;
   this->threadName_ += sin.str();
 
-  std::cout << "in the thread:" << this->threadName_ << std::endl;
+  std::cout << "IO thread is starting : " << this->threadName_
+            << std::endl;
   this->loop_->loop();
 }

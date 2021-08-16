@@ -22,6 +22,7 @@ void EventLoopThread::ThreadFunc() {
   this->loop_ = &loop;
 
   this->threadID_ = std::this_thread::get_id();
+  loop.SetTID(this->threadID_);
   std::stringstream sin;
   sin << this->threadID_;
   this->threadName_ += sin.str();

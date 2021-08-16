@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <iostream>
+#include <functional>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>

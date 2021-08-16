@@ -50,6 +50,7 @@ public:
 
   void Stop() { this->stop_ = true; }
 
+  void SetTID(std::thread::id tid) { this->tid_ = tid; }
   std::thread::id GetTID() { return this->tid_; }
   void WakeUp();
   void HandleRead();

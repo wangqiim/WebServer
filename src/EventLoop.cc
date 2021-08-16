@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <iostream>
 #include <unistd.h>
+#include <thread>
 #include <sys/eventfd.h>
 #include "EventLoop.h"
 
@@ -14,6 +15,7 @@ EventLoop::EventLoop()
     : functorlist_(), channellist_(), activechannellist_(), poller_(),
       stop_(true), tid_(), mutex_(), wakeupfd_(CreateEventFd()),
       wakeupChannel_() {
+  this->tid_ = std::this_thread::get_id();
   this->wakeupChannel_.SetFd(this->wakeupfd_);
   this->wakeupChannel_.SetEvents(EPOLLIN | EPOLLET);
   this->wakeupChannel_.SetReadHandle(

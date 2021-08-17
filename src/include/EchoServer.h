@@ -17,7 +17,7 @@ private:
   TcpServer tcpserver_;
 
 public:
-  EchoServer(EventLoop* loop, int port, int threadNum);
+  EchoServer(EventLoop* loop, int port, int ioThreadNum);
   ~EchoServer();
 
   void Start();

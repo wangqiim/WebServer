@@ -7,17 +7,20 @@ HttpSession::HttpSession() : statecode_(200), statemsg_("OK") {}
 
 HttpSession::~HttpSession() {}
 
-void HttpSession::PraseHttpRequest(std::string& s) {
-  std::string msg;
-  msg.swap(s);
+bool HttpSession::ParseHttpRequest(std::string& s) {
+  this->reqBuff_.append(s);
+  s.clear();
   std::string crlf("\r\n"), crlfcrlf("\r\n\r\n");
+  // request is incomplete
+  if (this->reqBuff_.find(crlfcrlf, 0) == std::string::npos)
+    return false;
   size_t prev = 0, next = 0, pos_colon = 0;
   std::string key, value;
 
   // prase http request line
-  if ((next = msg.find(crlf, prev)) != std::string::npos) {
+  if ((next = this->reqBuff_.find(crlf, prev)) != std::string::npos) {
     // GET http://xxx/ HTTP/1.1 \r\n
-    std::string first_line(msg.substr(prev, next - prev));
+    std::string first_line(this->reqBuff_.substr(prev, next - prev));
     prev = next;
     std::stringstream sstream(first_line);
     sstream >> (this->reqctx_.method);
@@ -26,27 +29,30 @@ void HttpSession::PraseHttpRequest(std::string& s) {
   } else {
     this->statecode_ = 400;
     this->statemsg_  = "Bad Request";
-    return;
+    return true;
   }
 
   // parse http request header
   size_t pos_crlfcrlf = 0;
-  if ((pos_crlfcrlf = msg.find(crlfcrlf, prev)) != std::string::npos) {
+  if ((pos_crlfcrlf = this->reqBuff_.find(crlfcrlf, prev)) !=
+      std::string::npos) {
     while (prev != pos_crlfcrlf) {
-      next      = msg.find(crlf, prev + 2);
-      pos_colon = msg.find(":", prev + 2);
-      key       = msg.substr(prev + 2, pos_colon - prev - 2);
-      value     = msg.substr(pos_colon + 2, next - pos_colon - 2);
-      prev      = next;
+      next      = this->reqBuff_.find(crlf, prev + 2);
+      pos_colon = this->reqBuff_.find(":", prev + 2);
+      key       = this->reqBuff_.substr(prev + 2, pos_colon - prev - 2);
+      value =
+          this->reqBuff_.substr(pos_colon + 2, next - pos_colon - 2);
+      prev                      = next;
       this->reqctx_.header[key] = value;
     }
   } else {
     this->statecode_ = 400;
     this->statemsg_  = "Bad Request";
-    return;
+    return true;
   }
   // parse http request body
-  this->reqctx_.body = msg.substr(pos_crlfcrlf + 4);
+  this->reqctx_.body = this->reqBuff_.substr(pos_crlfcrlf + 4);
+  return true;
 }
 
 void HttpSession::HttpProcess() {

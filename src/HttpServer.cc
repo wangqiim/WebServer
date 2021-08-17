@@ -48,26 +48,29 @@ void HttpServer::HandleMessage(TcpConnection* tcpConn, std::string& s) {
     this->threadPool_.AddTask([=, &s]() {
       if (s.empty())
         return;
-      session->PraseHttpRequest(s);
-      session->HttpProcess();
-      std::string msg;
-      session->AddToBuf(msg);
-      tcpConn->Send(msg);
-      if (!session->KeepAlive()) {
-        // 短链接
-        // tcpConn->HandleClose();
+      if (session->ParseHttpRequest(s)) {
+        session->HttpProcess();
+        std::string msg;
+        session->AddToBuf(msg);
+        tcpConn->Send(msg);
+        if (!session->KeepAlive()) {
+          // 短链接
+          tcpConn->Close();
+        }
       }
     });
     return;
   }
-  session->PraseHttpRequest(s);
-  session->HttpProcess();
-  std::string msg;
-  session->AddToBuf(msg);
-  tcpConn->Send(msg);
-  if (!session->KeepAlive()) {
-    // 短链接
-    // tcpConn->HandleClose();
+  if (session->ParseHttpRequest(s)) {
+    session->HttpProcess();
+    std::string msg;
+    session->AddToBuf(msg);
+    if (!msg.empty())
+      tcpConn->Send(msg);
+    if (!session->KeepAlive()) {
+      // 短链接
+      tcpConn->Close();
+    }
   }
 }
 

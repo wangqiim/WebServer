@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <atomic>
+#include <mutex>
 #include "Channel.h"
 #include "EventLoop.h"
 
@@ -21,9 +23,11 @@ public:
   ~TcpConnection();
 
   int Fd() { return this->fd_; }
+  /* Close 和Send 只会被服务层call */
+  void Close();
   void Send(std::string& msg);
-  void SendInLoop();
 
+  /* 注册到Channel上的回调，内嵌了上层的回调函数 */
   void HandleRead();
   void HandleWrite();
   void HandleError();
@@ -59,8 +63,11 @@ private:
   Channel* channel_;
   int fd_;
   struct sockaddr_in clientaddr_;
-  bool halfclose_;
+  std::atomic<bool> halfclose_;
+  bool closed_;
 
+  std::mutex mutex_;
+  std::string tmp_;
   std::string bufferin_;
   std::string bufferout_;
 

@@ -15,7 +15,8 @@ int sendn(int fd, std::string& bufferout);
 
 TcpConnection::TcpConnection(EventLoop* loop, int fd,
                              struct sockaddr_in clientaddr)
-    : loop_(loop), fd_(fd), clientaddr_(clientaddr), halfclose_(false) {
+    : loop_(loop), fd_(fd), clientaddr_(clientaddr), halfclose_(false),
+      closed_(false) {
   this->channel_ = new Channel();
   this->channel_->SetFd(this->fd_);
   this->channel_->SetEvents(EPOLLIN | EPOLLET);
@@ -37,36 +38,18 @@ TcpConnection::~TcpConnection() {
   close(this->fd_);
 }
 
-void TcpConnection::Send(std::string& msg) {
-  this->bufferout_ += msg;
-  if (this->loop_->GetTID() == std::this_thread::get_id()) {
-    SendInLoop();
-  } else {
-    // worker
-    // 线程也会call这个函数，显然work线程不进行IO操作！放到loop的task里
-    this->loop_->AddTask(std::bind(&TcpConnection::SendInLoop, this));
-  }
-}
+void TcpConnection::Close() { this->halfclose_ = true; }
 
-void TcpConnection::SendInLoop() {
-  int result = sendn(this->fd_, this->bufferout_);
-  if (result > 0) {
-    uint32_t events = this->channel_->GetEvents();
-    if (this->bufferout_.size() > 0) {
-      // send buf is not empty, need resend
-      this->channel_->SetEvents(events | EPOLLOUT);
-      this->loop_->UpdateChannelToPoller(this->channel_);
-    } else {
-      this->channel_->SetEvents(events & (~EPOLLOUT));
-      this->sendcompletecallback_(this);
-      if (this->halfclose_)
-        this->HandleClose();
-    }
-  } else if (result < 0) {
-    HandleError();
-  } else {
-    HandleClose();
+void TcpConnection::Send(std::string& msg) {
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    this->tmp_ += msg;
   }
+  // TODO: conn有竞争(this->bufferout_)，需要加锁
+  // this->bufferout_ += msg;
+  //
+  // 只有worker线程会call这个函数，显然work线程不进行IO操作！放到loop的task里
+  this->loop_->AddTask(std::bind(&TcpConnection::HandleWrite, this));
 }
 
 void TcpConnection::HandleRead() {
@@ -82,10 +65,16 @@ void TcpConnection::HandleRead() {
 }
 
 void TcpConnection::HandleWrite() {
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    this->bufferout_.append(this->tmp_);
+    this->tmp_.clear();
+  }
   int res = sendn(this->fd_, this->bufferout_);
   if (res > 0) {
     uint32_t events = this->channel_->GetEvents();
     if (bufferout_.size() > 0) {
+      // send buf is not empty, need resend
       this->channel_->SetEvents(events | EPOLLOUT);
       this->loop_->UpdateChannelToPoller(this->channel_);
     } else {
@@ -103,17 +92,27 @@ void TcpConnection::HandleWrite() {
 }
 
 void TcpConnection::HandleError() {
-  this->loop_->AddTask(this->connectioncleanup_);
-  this->errorcallback_(this);
+  if (!this->closed_) {
+    this->loop_->AddTask(this->connectioncleanup_);
+    this->errorcallback_(this);
+  }
 }
 
-//  Elegant closed
+//  recevied_fin Elegant closed
 void TcpConnection::HandleClose() {
-  if (this->bufferout_.size() > 0) {
+  {
+    std::lock_guard<std::mutex> lock(this->mutex_);
+    this->bufferout_.append(this->tmp_);
+    this->tmp_.clear();
+  }
+  if (this->closed_) {
+    return;
+  } else if (this->bufferout_.size() > 0) {
     this->halfclose_ = true;
   } else {
     this->loop_->AddTask(this->connectioncleanup_);
     this->closecallback_(this);
+    this->closed_ = true;
   }
 }
 

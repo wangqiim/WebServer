@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sys/epoll.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include "Channel.h"
 
@@ -24,6 +25,8 @@ void Channel::HandleEvent() {
     this->writehandler_();
     break;
   default:
+    std::cout << "events=" << this->events_;
+    std::cout << " errno=" << errno << std::endl;
     perror("unexpected happen\n");
     this->errorhandler_();
   }

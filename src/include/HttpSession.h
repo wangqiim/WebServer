@@ -40,13 +40,13 @@ private:
   std::string querystring_;
   std::string respctx_;
   std::string responsebody_;
-  std::string body_buff_;
+  std::string reqBuff_;
 
 public:
   HttpSession();
   ~HttpSession();
 
-  void PraseHttpRequest(std::string& s);
+  bool ParseHttpRequest(std::string& s);
   void HttpProcess();
   void AddToBuf(std::string& s);
   void HttpError(int err_num, std::string short_msg);

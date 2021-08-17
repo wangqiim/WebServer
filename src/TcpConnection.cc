@@ -46,7 +46,7 @@ void TcpConnection::Send(std::string& msg) {
     this->tmp_ += msg;
   }
   // TODO: conn有竞争(this->bufferout_)，需要加锁
-  // this->bufferout_ += msg;
+  // this->bufferout_ += msg;tc
   //
   // 只有worker线程会call这个函数，显然work线程不进行IO操作！放到loop的task里
   this->loop_->AddTask(std::bind(&TcpConnection::HandleWrite, this));

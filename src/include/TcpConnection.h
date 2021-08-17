@@ -27,12 +27,13 @@ public:
   void Close();
   void Send(std::string& msg);
 
-  /* 注册到Channel上的回调，内嵌了上层的回调函数 */
+  /* 注册到Channel上的回调，内嵌了上层的回调函数，只会被特定的loop线程call到*/
   void HandleRead();
   void HandleWrite();
   void HandleError();
   void HandleClose();
 
+  /* Channel上的回调再执行完Handlexxx()的逻辑后，会执行上层的回调函数 */
   void SetMessaeCallback(MessageCallback cb) {
     this->messagecallback_ = cb;
   }
@@ -63,11 +64,11 @@ private:
   Channel* channel_;
   int fd_;
   struct sockaddr_in clientaddr_;
-  std::atomic<bool> halfclose_;
-  bool closed_;
+  std::atomic<bool> halfclose_; /* 由于io线程和worker线程竞争 */
+  bool closed_; /* 引入消除sig segment，防止channel触发多次关闭conn */
 
   std::mutex mutex_;
-  std::string tmp_;
+  std::string tmp_; /* 由于io线程和worker线程竞争 */
   std::string bufferin_;
   std::string bufferout_;
 
